@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tulatok Rental Management System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- TOP HEADER BAR -->
+  <header class="top-bar">
+    <div class="brand">
+      <h1>Tulatok Rental Management System</h1>
+      <span class="badge-role" id="current-portal-badge">PORTAL SELECTION</span>
+    </div>
+    <button class="btn btn-outline btn-sm" id="switch-portal-btn" onclick="openPortalSelection()" style="display: none;">Switch Portal</button>
+  </header>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="app-container">
+
+    <!-- VIEW 1: HERO & PORTAL SELECTION -->
+    <section id="view-portal" class="view active">
+      <div class="hero-card">
+        <h2>Tulatok Rental Portal</h2>
+        
+        <div class="portal-selection-grid">
+          <div class="portal-card" onclick="openModal('admin-modal')">
+            <h3>Admin Command Portal</h3>
+            
+            <button class="btn btn-primary btn-block">Buksan ang Admin Login</button>
+          </div>
+
+          <div class="portal-card" onclick="openModal('tenant-modal')">
+            <h3>Tenant Portal</h3>
+
+            <button class="btn btn-secondary btn-block">Buksan ang Tenant Login</button>
+          </div>
+        </div>
+
+        <div class="arch-box">
+          <h4>System Architecture & Status</h4>
+          <ul>
+            <li>Storage Engine: <code>localStorage</code> Browser Storage</li>
+            <li>Authentication: Demo login for admin and tenant roles</li>
+            <li>Storage: Browser-local prototype data; not shared across devices</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: ADMIN / LANDLORD DASHBOARD -->
+    <section id="view-admin" class="view">
+      <div class="dashboard-header">
+        <div>
+          <h2>Landlord Command Dashboard</h2>
+          <p class="subtitle">System Administrator: <strong id="admin-name-display" style="color: var(--accent-blue);">Christian Gal</strong></p>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
+      </div>
+
+      <!-- KPI METRICS CARDS -->
+      <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+        <div class="kpi-card">
+          <span class="kpi-title">Total Registered Tenants</span>
+          <span class="kpi-value" id="kpi-total-tenants">0</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-title">Expected Monthly Revenue</span>
+          <span class="kpi-value" id="kpi-total-revenue" style="color: var(--accent-green);">PHP 0</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-title">Pending Maintenance Requests</span>
+          <span class="kpi-value" id="kpi-pending-issues" style="color: var(--accent-amber);">0</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-title">Occupancy Rate</span>
+          <span class="kpi-value" id="kpi-occupancy" style="color: var(--accent-blue);">100%</span>
+        </div>
+      </div>
+
+      <!-- MAIN ADMIN DASHBOARD GRID -->
+      <div class="dashboard-grid">
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="sidebar">
+          <button class="nav-btn active" onclick="switchAdminTab('tab-tenants', this)">Tenant Management</button>
+          <button class="nav-btn" onclick="switchAdminTab('tab-users', this)">Users & Roles</button>
+          <button class="nav-btn" onclick="switchAdminTab('tab-units', this)">Properties & Units</button>
+          <button class="nav-btn" onclick="switchAdminTab('tab-payments', this)">Payment Logs</button>
+          <button class="nav-btn" onclick="switchAdminTab('tab-issues', this)">Maintenance Tickets</button>
+          <button class="nav-btn" onclick="switchAdminTab('tab-feedback', this)">Comments & Feedback</button>
+          <button class="nav-btn" onclick="switchAdminTab('tab-documents', this)">Documents</button>
+          <button class="nav-btn" onclick="switchAdminTab('tab-notifications', this)">Notifications</button>
+          <button class="nav-btn" onclick="switchAdminTab('tab-reports', this)">Reports</button>
+          <button class="nav-btn" onclick="switchAdminTab('tab-console', this)">Audit Log</button>
+        </aside>
+
+        <!-- TAB CONTENT AREA -->
+        <div class="main-content">
+          <!-- TAB: REGISTER TENANT -->
+          <div id="tab-tenants" class="tab-pane active">
+            <div class="content-card">
+              <h3 id="tenant-form-heading">Register New Tenant</h3>
+              <form id="form-register-tenant" onsubmit="registerTenant(event)">
+                <input type="hidden" id="reg-tenant-id">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Last Name *</label>
+                    <input type="text" id="reg-lastname" class="form-control" placeholder="e.g. DELA CRUZ" required>
+                  </div>
+                  <div class="form-group">
+                    <label>First Name *</label>
+                    <input type="text" id="reg-firstname" class="form-control" placeholder="e.g. JUAN" required>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Middle Name</label>
+                    <input type="text" id="reg-middlename" class="form-control" placeholder="e.g. SANTOS">
+                  </div>
+                  <div class="form-group">
+                    <label>Available Unit *</label>
+                    <select id="reg-unit" class="form-control" required></select>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Monthly Rent (PHP) *</label>
+                    <input type="number" id="reg-rent" class="form-control" value="8500" required>
+                  </div>
+                  <div class="form-group">
+                    <label>Due Day of Month *</label>
+                    <input type="number" id="reg-dueday" class="form-control" min="1" max="31" value="5" required>
+                  </div>
+                </div>
+                <button type="submit" id="tenant-form-submit" class="btn btn-primary btn-block">Save Tenant & Generate Password</button>
+                <button type="button" id="tenant-form-cancel" class="btn btn-outline btn-block" onclick="cancelTenantEdit()" style="display:none; margin-top:0.5rem;">Cancel Edit</button>
+              </form>
+            </div>
+
+            <div class="content-card">
+              <h3>Tenant Directory</h3>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Tenant ID</th>
+                      <th>Full Name</th>
+                      <th>Unit</th>
+                      <th>Monthly Rent</th>
+                      <th>Generated Password</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-admin-tenants"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div id="tab-users" class="tab-pane">
+            <div class="content-card"><h3>System Users</h3><p class="subtitle">Demo accounts and roles for the rental prototype.</p>
+              <div class="table-responsive"><table class="data-table"><thead><tr><th>User</th><th>Account ID</th><th>Role</th><th>Unit</th><th>Status</th></tr></thead><tbody id="table-admin-users"></tbody></table></div>
+            </div>
+            <div class="content-card"><h3>Role Access Matrix</h3><p class="subtitle">This matrix documents intended demo access; the browser-only prototype does not enforce server-side security.</p>
+              <div class="table-responsive"><table class="data-table"><thead><tr><th>Feature</th><th>Landlord / Admin</th><th>Tenant</th></tr></thead><tbody>
+                <tr><td>Manage units and tenant accounts</td><td>Allowed</td><td>Not allowed</td></tr>
+                <tr><td>Review payments and maintenance</td><td>Allowed</td><td>Not allowed</td></tr>
+                <tr><td>Submit payments and maintenance requests</td><td>View all</td><td>Own account</td></tr>
+                <tr><td>Upload and view documents</td><td>View all</td><td>Own account</td></tr>
+                <tr><td>View audit log and reports</td><td>Allowed</td><td>Not allowed</td></tr>
+              </tbody></table></div>
+            </div>
+          </div>
+
+          <!-- TAB: PROPERTY / UNIT INVENTORY -->
+          <div id="tab-units" class="tab-pane">
+            <div class="content-card">
+              <h3 id="unit-form-heading">Add Rental Unit</h3>
+              <form id="form-register-unit" onsubmit="registerUnit(event)">
+                <input type="hidden" id="edit-unit-id">
+                <div class="form-row">
+                  <div class="form-group"><label>Unit Name *</label><input id="unit-name" class="form-control" placeholder="e.g. Unit 303 - 1BR" required></div>
+                  <div class="form-group"><label>Monthly Rent (PHP) *</label><input id="unit-rent" class="form-control" type="number" min="1" required></div>
+                </div>
+                <p class="subtitle">Changing a unit rent affects future tenant registrations. Current tenant rent remains as agreed.</p>
+                <button id="unit-form-submit" class="btn btn-primary" type="submit">Add Unit</button>
+                <button type="button" id="unit-form-cancel" class="btn btn-outline" onclick="cancelUnitEdit()" style="display:none;">Cancel Edit</button>
+              </form>
+            </div>
+            <div class="content-card">
+              <h3>Property / Unit Inventory</h3>
+              <div class="table-responsive"><table class="data-table"><thead><tr><th>Unit</th><th>Monthly Rent</th><th>Occupancy</th><th>Tenant</th><th>Actions</th></tr></thead><tbody id="table-admin-units"></tbody></table></div>
+            </div>
+          </div>
+
+          <!-- TAB: PAYMENT RECORDS -->
+          <div id="tab-payments" class="tab-pane">
+            <div class="content-card">
+              <h3>Payment Records</h3>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Ref ID</th>
+                      <th>Tenant Name</th>
+                      <th>Amount</th>
+                      <th>Payment Date</th>
+                      <th>Payment Method</th>
+                      <th>Status</th>
+                      <th>Review</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-admin-payments"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: MAINTENANCE TICKETS -->
+          <div id="tab-issues" class="tab-pane">
+            <div class="content-card">
+              <h3>Maintenance & Repair Tickets</h3>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Ticket ID</th>
+                      <th>Tenant Name</th>
+                      <th>Category</th>
+                      <th>Description</th>
+                      <th>Date Reported</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-admin-issues"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div id="tab-feedback" class="tab-pane">
+            <div class="content-card"><h3>Reply to a Maintenance Request</h3>
+              <form id="form-admin-feedback" onsubmit="submitFeedback(event, 'admin')">
+                <div class="form-group"><label>Select request *</label><select id="admin-feedback-issue" class="form-control" required onchange="renderFeedbackThread('admin')"></select></div>
+                <div class="form-group"><label>Comment *</label><textarea id="admin-feedback-text" class="form-control" rows="3" required placeholder="Add an update or ask a follow-up question..."></textarea></div>
+                <button type="submit" class="btn btn-primary">Post Reply</button>
+              </form>
+            </div>
+            <div class="content-card"><h3>Request Conversation</h3><ul id="admin-feedback-thread" class="feedback-thread"></ul></div>
+          </div>
+          <div id="tab-documents" class="tab-pane">
+            <div class="content-card"><h3>Tenant Documents</h3><p class="subtitle">Files are stored in this browser for the prototype.</p>
+              <div class="table-responsive"><table class="data-table"><thead><tr><th>Date</th><th>Tenant</th><th>Title</th><th>Version</th><th>Type</th><th>File</th></tr></thead><tbody id="table-admin-documents"></tbody></table></div>
+            </div>
+          </div>
+          <div id="tab-notifications" class="tab-pane"><div class="content-card"><h3>Notification Log</h3><ul id="admin-notification-list" class="notification-list"></ul></div></div>
+          <div id="tab-reports" class="tab-pane"><div class="content-card"><h3>Rental Summary</h3><div id="admin-report-summary" class="details-grid"></div></div></div>
+
+          <!-- TAB: SYSTEM CONSOLE LOGS -->
+          <div id="tab-console" class="tab-pane">
+            <div class="content-card">
+              <h3>Saved System Activity</h3>
+              <div class="table-responsive"><table class="data-table"><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Details</th></tr></thead><tbody id="table-admin-audit"></tbody></table></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: TENANT DASHBOARD -->
+    <section id="view-tenant" class="view">
+      <div class="dashboard-header">
+        <div>
+          <h2>Tenant Portal Dashboard</h2>
+          <p class="subtitle">Welcome back, <strong id="tenant-display-name" style="color: var(--accent-blue);">Tenant</strong></p>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
+      </div>
+
+      <!-- TENANT DETAILS OVERVIEW -->
+      <div class="details-grid" style="margin-bottom: 1.5rem;">
+        <div class="details-item">
+          <label>Assigned Unit</label>
+          <span id="tenant-display-unit">Unit ---</span>
+        </div>
+        <div class="details-item">
+          <label>Monthly Rent</label>
+          <span id="tenant-display-rent" style="color: var(--accent-green);">PHP 0.00</span>
+        </div>
+        <div class="details-item">
+          <label>Due Date Schedule</label>
+          <span id="tenant-display-duedate" style="color: var(--accent-amber);">Every 5th</span>
+        </div>
+      </div>
+
+      <!-- TENANT CONTROLS & TABS -->
+      <div class="dashboard-grid">
+        <aside class="sidebar">
+          <button class="nav-btn active" onclick="switchTenantTab('tab-tenant-pay', this)">Pay Rent</button>
+          <button class="nav-btn" onclick="switchTenantTab('tab-tenant-issue', this)">Report Issue</button>
+          <button class="nav-btn" onclick="switchTenantTab('tab-tenant-history', this)">My Records</button>
+          <button class="nav-btn" onclick="switchTenantTab('tab-tenant-feedback', this)">Request Updates</button>
+          <button class="nav-btn" onclick="switchTenantTab('tab-tenant-documents', this)">My Documents</button>
+          <button class="nav-btn" onclick="switchTenantTab('tab-tenant-notifications', this)">Notifications</button>
+        </aside>
+
+        <div class="main-content">
+          <!-- SUBMIT PAYMENT FORM -->
+          <div id="tab-tenant-pay" class="tab-pane active">
+            <div class="content-card">
+              <h3>Submit Monthly Payment</h3>
+              <form id="form-tenant-payment" onsubmit="submitTenantPayment(event)">
+                <div class="form-group">
+                  <label>Amount (PHP) *</label>
+                  <input type="number" id="pay-amount" class="form-control" placeholder="8500" required>
+                </div>
+                <div class="form-group">
+                  <label>Payment Method *</label>
+                  <select id="pay-method" class="form-control">
+                    <option value="GCash">GCash</option>
+                    <option value="Maya">Maya</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Cash">Cash to Landlord</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Reference / Receipt No. *</label>
+                  <input type="text" id="pay-ref" class="form-control" placeholder="e.g. Ref #9921048" required>
+                </div>
+                <button type="submit" class="btn btn-secondary btn-block">Submit Payment Receipt</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- REPORT MAINTENANCE FORM -->
+          <div id="tab-tenant-issue" class="tab-pane">
+            <div class="content-card">
+              <h3>Report Maintenance / Repair Issue</h3>
+              <form id="form-tenant-issue" onsubmit="submitTenantIssue(event)">
+                <div class="form-group">
+                  <label>Category *</label>
+                  <select id="issue-category" class="form-control">
+                    <option value="Plumbing">Plumbing / Water Leak</option>
+                    <option value="Electrical">Electrical / Lighting</option>
+                    <option value="Appliance">Appliance / Aircon</option>
+                    <option value="Structure">Door, Window & Lock</option>
+                    <option value="Other">Other Repairs</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Detailed Problem Description *</label>
+                  <textarea id="issue-desc" class="form-control" rows="4" placeholder="Describe the issue in detail..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Submit Repair Ticket</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- TENANT RECORDS / HISTORY -->
+          <div id="tab-tenant-history" class="tab-pane">
+            <div class="content-card">
+              <h3>Payment History</h3>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Amount</th>
+                      <th>Method</th>
+                      <th>Receipt Ref</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-tenant-payments"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="content-card">
+              <h3>My Maintenance Tickets</h3>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Category</th>
+                      <th>Description</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-tenant-issues"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div id="tab-tenant-feedback" class="tab-pane">
+            <div class="content-card"><h3>Comment on a Maintenance Request</h3>
+              <form id="form-tenant-feedback" onsubmit="submitFeedback(event, 'tenant')">
+                <div class="form-group"><label>My request *</label><select id="tenant-feedback-issue" class="form-control" required onchange="renderFeedbackThread('tenant')"></select></div>
+                <div class="form-group"><label>Comment *</label><textarea id="tenant-feedback-text" class="form-control" rows="3" required placeholder="Ask a question or add information..."></textarea></div>
+                <button type="submit" class="btn btn-primary">Post Comment</button>
+              </form>
+            </div>
+            <div class="content-card"><h3>Conversation</h3><ul id="tenant-feedback-thread" class="feedback-thread"></ul></div>
+          </div>
+          <div id="tab-tenant-documents" class="tab-pane">
+            <div class="content-card"><h3>Upload a Lease or Supporting Document</h3><p class="subtitle">Use the same title and type to add a new version. Files remain in this browser for the prototype.</p>
+              <form id="form-tenant-document" onsubmit="submitTenantDocument(event)">
+                <div class="form-row">
+                  <div class="form-group"><label>Document type *</label><select id="document-type" class="form-control" required><option>Lease Agreement</option><option>Payment Receipt</option><option>Move-in Checklist</option><option>Other</option></select></div>
+                  <div class="form-group"><label>Document title *</label><input id="document-title" class="form-control" required placeholder="e.g. Lease Agreement 2026"></div>
+                  <div class="form-group"><label>Select file (up to 500 KB) *</label><input id="document-file" class="form-control" type="file" required></div>
+                </div>
+                <button class="btn btn-primary" type="submit">Upload Document</button>
+              </form>
+            </div>
+            <div class="content-card"><h3>My Documents</h3><ul id="tenant-document-list" class="doc-list"></ul></div>
+          </div>
+          <div id="tab-tenant-notifications" class="tab-pane"><div class="content-card"><h3>My Notification Log</h3><ul id="tenant-notification-list" class="notification-list"></ul></div></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL 1: ADMIN LOGIN -->
+  <div id="admin-modal" class="modal-overlay">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal('admin-modal')">&times;</button>
+      <div class="modal-header">
+        <h3>Admin Command Login</h3>
+        <p>Login as Landlord / Admin</p>
+      </div>
+      <form onsubmit="loginAdmin(event)">
+        <div class="form-group">
+          <label>Select Admin Profile</label>
+          <select id="admin-select" class="form-control">
+            <option value="Christian Gal">Christian Gal (System Admin / Landlord)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Login to Dashboard</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: TENANT LOGIN & SEARCH -->
+  <div id="tenant-modal" class="modal-overlay">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal('tenant-modal')">&times;</button>
+      <div class="modal-header">
+        <h3>Tenant Access Portal</h3>
+        <p>Find your account or enter credentials</p>
+      </div>
+      <form onsubmit="loginTenant(event)">
+        <div class="form-group">
+          <label>Last Name *</label>
+          <input type="text" id="tenant-search-lastname" class="form-control" placeholder="e.g. DELA CRUZ" required>
+        </div>
+        <div class="form-group">
+          <label>First Name *</label>
+          <input type="text" id="tenant-search-firstname" class="form-control" placeholder="e.g. JUAN" required>
+        </div>
+        <div class="form-group">
+          <label>Middle Name (Optional)</label>
+          <input type="text" id="tenant-search-middlename" class="form-control" placeholder="e.g. SANTOS">
+        </div>
+
+        <button type="button" class="btn btn-outline btn-block" style="margin-bottom: 1rem; border-color: var(--accent-blue); color: var(--accent-blue);" onclick="autoFillPassword()">Find Account & Auto-Fill Password</button>
+
+        <div class="form-group">
+          <label>Auto-Generated Password *</label>
+          <input type="password" id="tenant-password-input" class="form-control" placeholder="Password (e.g. TN-1001)" required>
+        </div>
+
+        <button type="submit" class="btn btn-secondary btn-block">Enter Tenant Portal</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
