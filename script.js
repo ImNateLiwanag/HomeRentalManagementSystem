@@ -34,7 +34,7 @@ async function loadCloudData() {
     supabaseClient.from("profiles").select("id,email,full_name,role"),
     supabaseClient.from("units").select("id,name,monthly_rent,is_active,updated_at"),
     supabaseClient.from("tenancies").select("id,tenant_id,unit_id,monthly_rent,due_day,start_date,end_date"),
-    supabaseClient.from("payments").select("id,tenant_id,amount,paid_on,method,reference,status,reviewed_by,reviewed_at,created_at"),
+    supabaseClient.from("payments").select("id,submission_id,tenant_id,amount,billing_period,paid_on,method,reference,proof_storage_path,proof_file_name,status,reviewed_by,reviewed_at,created_at"),
     supabaseClient.from("maintenance_requests").select("id,tenant_id,category,description,status,created_at,updated_at"),
     supabaseClient.from("documents").select("id,tenant_id,title,category,storage_path,file_name,content_type,file_size,version,created_at"),
     supabaseClient.from("feedback").select("id,tenant_id,issue_id,author_id,message,created_at"),
@@ -59,7 +59,15 @@ async function loadCloudData() {
   }).filter(Boolean);
   units = unitRows.map(function (u) { return { id: u.id, name: u.name, rent: Number(u.monthly_rent), isActive: u.is_active }; });
   const tenantById = new Map(tenants.map(function (t) { return [t.id, t]; }));
-  payments = paymentRows.map(function (p) { const t = tenantById.get(p.tenant_id); return { id: p.id, tenantId: p.tenant_id, tenantName: t ? t.firstName + " " + t.lastName : "Tenant", amount: Number(p.amount), date: p.paid_on, method: p.method, receipt: p.reference, status: p.status }; });
+  payments = await Promise.all(paymentRows.map(async function (p) {
+    const t = tenantById.get(p.tenant_id);
+    let proofUrl = "";
+    if (p.proof_storage_path) {
+      const signed = await supabaseClient.storage.from("rental-documents").createSignedUrl(p.proof_storage_path, 3600);
+      if (!signed.error && signed.data) proofUrl = signed.data.signedUrl;
+    }
+    return { id: p.id, submissionId: p.submission_id, tenantId: p.tenant_id, tenantName: t ? t.firstName + " " + t.lastName : "Tenant", amount: Number(p.amount), period: p.billing_period, date: p.paid_on, method: p.method, proofName: p.proof_file_name, proofUrl: proofUrl, status: p.status };
+  }));
   issues = issueRows.map(function (i) { const t = tenantById.get(i.tenant_id); return { id: i.id, tenantId: i.tenant_id, tenantName: t ? t.firstName + " " + t.lastName : "Tenant", category: i.category, description: i.description, date: i.created_at.slice(0, 10), status: i.status }; });
   const readRows = ensureDb(await supabaseClient.from("notification_reads").select("notification_id,user_id"));
   const readsByNotification = new Map();
@@ -276,9 +284,10 @@ function renderPayments() {
       review = '<button class="btn btn-primary btn-sm" onclick="reviewPayment(\'' + escapeHtml(payment.id) + '\', \'Approved\')">Approve</button> ' +
         '<button class="btn btn-outline btn-sm" onclick="reviewPayment(\'' + escapeHtml(payment.id) + '\', \'Rejected\')">Reject</button>';
     }
-    row.innerHTML = "<td>" + escapeHtml(payment.id) + "</td><td>" + escapeHtml(payment.tenantName) +
+    row.innerHTML = "<td>" + escapeHtml(payment.submissionId) + "</td><td>" + escapeHtml(payment.tenantName) +
       '</td><td class="money">PHP ' + Number(payment.amount).toLocaleString() + "</td><td>" +
-      escapeHtml(payment.date) + "</td><td>" + escapeHtml(payment.method + " (" + payment.receipt + ")") +
+      escapeHtml(payment.period ? payment.period.slice(0, 7) : "—") + "</td><td>" + escapeHtml(payment.date || "—") + "</td><td>" + escapeHtml(payment.method) +
+      '</td><td>' + (payment.proofUrl ? '<a class="btn btn-outline btn-sm" href="' + escapeHtml(payment.proofUrl) + '" target="_blank" rel="noopener">View proof</a>' : "—") +
       '</td><td><span class="status-badge ' + statusClass(payment.status) + '">' + escapeHtml(payment.status) +
       "</span></td><td>" + review + "</td>";
     body.appendChild(row);
@@ -651,12 +660,19 @@ function renderTenantDashboard() {
   document.getElementById("tenant-display-unit").innerText = currentTenant.unit;
   document.getElementById("tenant-display-rent").innerText = "PHP " + Number(currentTenant.rent).toLocaleString();
   document.getElementById("tenant-display-duedate").innerText = "Every " + currentTenant.dueDay + "th of the month";
+  document.getElementById("pay-amount").value = Number(currentTenant.rent);
+  const periodInput = document.getElementById("pay-period");
+  if (!periodInput.value) {
+    const now = new Date();
+    periodInput.value = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+  }
   const paymentsBody = document.getElementById("table-tenant-payments");
   paymentsBody.innerHTML = "";
   payments.filter(function (payment) { return payment.tenantId === currentTenant.id; }).slice().reverse().forEach(function (payment) {
     const row = document.createElement("tr");
-    row.innerHTML = "<td>" + escapeHtml(payment.date) + "</td><td>PHP " + Number(payment.amount).toLocaleString() +
-      "</td><td>" + escapeHtml(payment.method) + "</td><td>" + escapeHtml(payment.receipt) +
+    row.innerHTML = "<td>" + escapeHtml(payment.date || "—") + "</td><td>PHP " + Number(payment.amount).toLocaleString() +
+      "</td><td>" + escapeHtml(payment.method) + "</td><td>" + escapeHtml(payment.submissionId) +
+      '</td><td>' + (payment.proofUrl ? '<a class="btn btn-outline btn-sm" href="' + escapeHtml(payment.proofUrl) + '" target="_blank" rel="noopener">View proof</a>' : "—") +
       '</td><td><span class="status-badge ' + statusClass(payment.status) + '">' + escapeHtml(payment.status) + "</span></td>";
     paymentsBody.appendChild(row);
   });
@@ -678,24 +694,54 @@ function renderTenantDashboard() {
 async function submitTenantPayment(event) {
   event.preventDefault();
   if (!currentTenant) return;
-  const amount = Number(document.getElementById("pay-amount").value);
+  const amount = Number(currentTenant.rent);
+  const period = document.getElementById("pay-period").value;
   const method = document.getElementById("pay-method").value;
-  const reference = document.getElementById("pay-ref").value.trim();
-  if (!Number.isFinite(amount) || amount <= 0 || !reference) {
-    alert("Enter a positive amount and a receipt reference.");
+  const fileInput = document.getElementById("pay-proof");
+  const file = fileInput.files && fileInput.files[0];
+  const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
+  if (!Number.isFinite(amount) || amount <= 0 || !/^\d{4}-\d{2}$/.test(period) || !file) {
+    alert("Choose the rent month and attach payment proof.");
     return;
   }
-  let paymentId;
+  if (payments.some(function (payment) { return payment.tenantId === currentUser.id && payment.status !== "Rejected" && payment.period && payment.period.slice(0, 7) === period; })) {
+    alert("A payment submission already exists for this rent month.");
+    return;
+  }
+  if (!allowedTypes.includes(file.type) || file.size < 1 || file.size > 10 * 1024 * 1024) {
+    alert("Payment proof must be a PDF, JPG, or PNG file no larger than 10 MB.");
+    return;
+  }
+  const extension = file.type === "application/pdf" ? "pdf" : (file.type === "image/png" ? "png" : "jpg");
+  const storagePath = currentUser.id + "/payment-proofs/" + crypto.randomUUID() + "." + extension;
+  let proofUploaded = false;
+  let submissionId;
   try {
-    const inserted = ensureDb(await supabaseClient.from("payments").insert({ tenant_id: currentUser.id, amount: amount, paid_on: new Date().toISOString().slice(0, 10), method: method, reference: reference }).select("id").single());
-    paymentId = inserted.id;
-  } catch (error) { alert(error.message || "Could not submit payment."); return; }
+    ensureDb(await supabaseClient.storage.from("rental-documents").upload(storagePath, file, { contentType: file.type, upsert: false }));
+    proofUploaded = true;
+    const inserted = ensureDb(await supabaseClient.from("payments").insert({
+      tenant_id: currentUser.id,
+      amount: amount,
+      billing_period: period + "-01",
+      method: method,
+      proof_storage_path: storagePath,
+      proof_file_name: file.name,
+      proof_content_type: file.type,
+      proof_file_size: file.size
+    }).select("id,submission_id").single());
+    submissionId = inserted.submission_id;
+  } catch (error) {
+    if (proofUploaded) await supabaseClient.storage.from("rental-documents").remove([storagePath]);
+    if (error.code === "23505") alert("A payment submission already exists for this rent month.");
+    else alert(error.message || "Could not submit payment.");
+    return;
+  }
+  document.getElementById("form-tenant-payment").reset();
   await loadCloudData();
   renderTenantDashboard();
-  document.getElementById("form-tenant-payment").reset();
-  saveAudit("Payment submitted", paymentId + " submitted for landlord review.");
+  saveAudit("Payment submitted", submissionId + " submitted for landlord review.");
   addNotification(null, currentProfile.full_name + " submitted a payment for review.");
-  alert("Payment receipt submitted. It will show as pending until the landlord reviews it.");
+  alert("Payment submitted for review. Your tracking ID is " + submissionId + ". It remains pending until the landlord reviews it.");
 }
 async function submitTenantIssue(event) {
   event.preventDefault();

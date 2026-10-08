@@ -165,7 +165,7 @@
             <div class="content-card"><h3>System Users</h3><p class="subtitle">Accounts registered with Supabase Auth and their rental assignments.</p>
               <div class="table-responsive"><table class="data-table"><thead><tr><th>User</th><th>Email / User ID</th><th>Role</th><th>Unit</th><th>Status</th></tr></thead><tbody id="table-admin-users"></tbody></table></div>
             </div>
-            <div class="content-card"><h3>Role Access Matrix</h3><p class="subtitle">This matrix documents intended demo access; the browser-only prototype does not enforce server-side security.</p>
+            <div class="content-card"><h3>Role Access Matrix</h3><p class="subtitle">Supabase authentication and row-level security enforce access to rental records.</p>
               <div class="table-responsive"><table class="data-table"><thead><tr><th>Feature</th><th>Landlord / Admin</th><th>Tenant</th></tr></thead><tbody>
                 <tr><td>Manage units and tenant accounts</td><td>Allowed</td><td>Not allowed</td></tr>
                 <tr><td>Review payments and maintenance</td><td>Allowed</td><td>Not allowed</td></tr>
@@ -208,8 +208,10 @@
                       <th>Ref ID</th>
                       <th>Tenant Name</th>
                       <th>Amount</th>
-                      <th>Payment Date</th>
+                      <th>Rent Period</th>
+                      <th>Submitted</th>
                       <th>Payment Method</th>
+                      <th>Proof</th>
                       <th>Status</th>
                       <th>Review</th>
                     </tr>
@@ -254,7 +256,7 @@
             <div class="content-card"><h3>Request Conversation</h3><ul id="admin-feedback-thread" class="feedback-thread"></ul></div>
           </div>
           <div id="tab-documents" class="tab-pane">
-            <div class="content-card"><h3>Tenant Documents</h3><p class="subtitle">Files are stored in this browser for the prototype.</p>
+            <div class="content-card"><h3>Tenant Documents</h3><p class="subtitle">Files are stored in private Supabase storage and shared only with the tenant and landlord.</p>
               <div class="table-responsive"><table class="data-table"><thead><tr><th>Date</th><th>Tenant</th><th>Title</th><th>Version</th><th>Type</th><th>File</th></tr></thead><tbody id="table-admin-documents"></tbody></table></div>
             </div>
           </div>
@@ -315,9 +317,9 @@
             <div class="content-card">
               <h3>Submit Monthly Payment</h3>
               <form id="form-tenant-payment" onsubmit="submitTenantPayment(event)">
-                <div class="form-group">
-                  <label>Amount (PHP) *</label>
-                  <input type="number" id="pay-amount" class="form-control" placeholder="8500" required>
+                <div class="form-row">
+                  <div class="form-group"><label>Rent Period *</label><input type="month" id="pay-period" class="form-control" required></div>
+                  <div class="form-group"><label>Amount (PHP)</label><input type="number" id="pay-amount" class="form-control" readonly required></div>
                 </div>
                 <div class="form-group">
                   <label>Payment Method *</label>
@@ -329,10 +331,11 @@
                   </select>
                 </div>
                 <div class="form-group">
-                  <label>Reference / Receipt No. *</label>
-                  <input type="text" id="pay-ref" class="form-control" placeholder="e.g. Ref #9921048" required>
+                  <label>Payment proof (PDF, JPG, or PNG; up to 10 MB) *</label>
+                  <input type="file" id="pay-proof" class="form-control" accept="application/pdf,image/jpeg,image/png" required>
+                  <p class="subtitle">Upload the transfer confirmation or a photo of the receipt. The landlord will review it before marking the payment approved.</p>
                 </div>
-                <button type="submit" class="btn btn-secondary btn-block">Submit Payment Receipt</button>
+                <button type="submit" class="btn btn-secondary btn-block">Submit Payment for Review</button>
               </form>
             </div>
           </div>
@@ -369,10 +372,11 @@
                 <table class="data-table">
                   <thead>
                     <tr>
-                      <th>Date</th>
+                      <th>Submitted</th>
                       <th>Amount</th>
                       <th>Method</th>
-                      <th>Receipt Ref</th>
+                      <th>Submission ID</th>
+                      <th>Proof</th>
                       <th>Status</th>
                     </tr>
                   </thead>
@@ -409,7 +413,7 @@
             <div class="content-card"><h3>Conversation</h3><ul id="tenant-feedback-thread" class="feedback-thread"></ul></div>
           </div>
           <div id="tab-tenant-documents" class="tab-pane">
-            <div class="content-card"><h3>Upload a Lease or Supporting Document</h3><p class="subtitle">Use the same title and type to add a new version. Files remain in this browser for the prototype.</p>
+            <div class="content-card"><h3>Upload a Lease or Supporting Document</h3><p class="subtitle">Use the same title and type to add a new version. Files are stored in your private Supabase document storage.</p>
               <form id="form-tenant-document" onsubmit="submitTenantDocument(event)">
                 <div class="form-row">
                   <div class="form-group"><label>Document type *</label><select id="document-type" class="form-control" required><option>Lease Agreement</option><option>Payment Receipt</option><option>Move-in Checklist</option><option>Other</option></select></div>
