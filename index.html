@@ -42,9 +42,9 @@
         <div class="arch-box">
           <h4>System Architecture & Status</h4>
           <ul>
-            <li>Storage Engine: <code>localStorage</code> Browser Storage</li>
-            <li>Authentication: Demo login for admin and tenant roles</li>
-            <li>Storage: Browser-local prototype data; not shared across devices</li>
+            <li>Storage Engine: Supabase Postgres and private Storage</li>
+            <li>Authentication: Supabase Auth with tenant and admin roles</li>
+            <li>Storage: Shared records protected by row-level security</li>
           </ul>
         </div>
       </div>
@@ -55,7 +55,7 @@
       <div class="dashboard-header">
         <div>
           <h2>Landlord Command Dashboard</h2>
-          <p class="subtitle">System Administrator: <strong id="admin-name-display" style="color: var(--accent-blue);">Christian Gal</strong></p>
+          <p class="subtitle">System Administrator: <strong id="admin-name-display" style="color: var(--accent-blue);">Milan Liwanag</strong></p>
         </div>
         <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
       </div>
@@ -104,6 +104,7 @@
               <h3 id="tenant-form-heading">Register New Tenant</h3>
               <form id="form-register-tenant" onsubmit="registerTenant(event)">
                 <input type="hidden" id="reg-tenant-id">
+                <div class="form-group"><label>Tenant account *</label><select id="reg-profile" class="form-control" required></select></div>
                 <div class="form-row">
                   <div class="form-group">
                     <label>Last Name *</label>
@@ -131,10 +132,10 @@
                   </div>
                   <div class="form-group">
                     <label>Due Day of Month *</label>
-                    <input type="number" id="reg-dueday" class="form-control" min="1" max="31" value="5" required>
+                    <input type="number" id="reg-dueday" class="form-control" min="1" max="28" value="5" required>
                   </div>
                 </div>
-                <button type="submit" id="tenant-form-submit" class="btn btn-primary btn-block">Save Tenant & Generate Password</button>
+                <button type="submit" id="tenant-form-submit" class="btn btn-primary btn-block">Assign Tenant & Unit</button>
                 <button type="button" id="tenant-form-cancel" class="btn btn-outline btn-block" onclick="cancelTenantEdit()" style="display:none; margin-top:0.5rem;">Cancel Edit</button>
               </form>
             </div>
@@ -149,7 +150,7 @@
                       <th>Full Name</th>
                       <th>Unit</th>
                       <th>Monthly Rent</th>
-                      <th>Generated Password</th>
+                      <th>Email</th>
                       <th>Status</th>
                       <th>Action</th>
                     </tr>
@@ -161,8 +162,8 @@
           </div>
 
           <div id="tab-users" class="tab-pane">
-            <div class="content-card"><h3>System Users</h3><p class="subtitle">Demo accounts and roles for the rental prototype.</p>
-              <div class="table-responsive"><table class="data-table"><thead><tr><th>User</th><th>Account ID</th><th>Role</th><th>Unit</th><th>Status</th></tr></thead><tbody id="table-admin-users"></tbody></table></div>
+            <div class="content-card"><h3>System Users</h3><p class="subtitle">Accounts registered with Supabase Auth and their rental assignments.</p>
+              <div class="table-responsive"><table class="data-table"><thead><tr><th>User</th><th>Email / User ID</th><th>Role</th><th>Unit</th><th>Status</th></tr></thead><tbody id="table-admin-users"></tbody></table></div>
             </div>
             <div class="content-card"><h3>Role Access Matrix</h3><p class="subtitle">This matrix documents intended demo access; the browser-only prototype does not enforce server-side security.</p>
               <div class="table-responsive"><table class="data-table"><thead><tr><th>Feature</th><th>Landlord / Admin</th><th>Tenant</th></tr></thead><tbody>
@@ -413,7 +414,7 @@
                 <div class="form-row">
                   <div class="form-group"><label>Document type *</label><select id="document-type" class="form-control" required><option>Lease Agreement</option><option>Payment Receipt</option><option>Move-in Checklist</option><option>Other</option></select></div>
                   <div class="form-group"><label>Document title *</label><input id="document-title" class="form-control" required placeholder="e.g. Lease Agreement 2026"></div>
-                  <div class="form-group"><label>Select file (up to 500 KB) *</label><input id="document-file" class="form-control" type="file" required></div>
+                  <div class="form-group"><label>Select file (PDF, JPG, PNG; up to 10 MB) *</label><input id="document-file" class="form-control" type="file" accept="application/pdf,image/jpeg,image/png" required></div>
                 </div>
                 <button class="btn btn-primary" type="submit">Upload Document</button>
               </form>
@@ -436,12 +437,8 @@
         <p>Login as Landlord / Admin</p>
       </div>
       <form onsubmit="loginAdmin(event)">
-        <div class="form-group">
-          <label>Select Admin Profile</label>
-          <select id="admin-select" class="form-control">
-            <option value="Christian Gal">Christian Gal (System Admin / Landlord)</option>
-          </select>
-        </div>
+        <div class="form-group"><label>Email *</label><input id="admin-email" class="form-control" type="email" autocomplete="username" required></div>
+        <div class="form-group"><label>Password *</label><input id="admin-password" class="form-control" type="password" autocomplete="current-password" required></div>
         <button type="submit" class="btn btn-primary btn-block">Login to Dashboard</button>
       </form>
     </div>
@@ -453,34 +450,20 @@
       <button class="modal-close" onclick="closeModal('tenant-modal')">&times;</button>
       <div class="modal-header">
         <h3>Tenant Access Portal</h3>
-        <p>Find your account or enter credentials</p>
+        <p>Sign in with your tenant account or create one</p>
       </div>
       <form onsubmit="loginTenant(event)">
-        <div class="form-group">
-          <label>Last Name *</label>
-          <input type="text" id="tenant-search-lastname" class="form-control" placeholder="e.g. DELA CRUZ" required>
-        </div>
-        <div class="form-group">
-          <label>First Name *</label>
-          <input type="text" id="tenant-search-firstname" class="form-control" placeholder="e.g. JUAN" required>
-        </div>
-        <div class="form-group">
-          <label>Middle Name (Optional)</label>
-          <input type="text" id="tenant-search-middlename" class="form-control" placeholder="e.g. SANTOS">
-        </div>
-
-        <button type="button" class="btn btn-outline btn-block" style="margin-bottom: 1rem; border-color: var(--accent-blue); color: var(--accent-blue);" onclick="autoFillPassword()">Find Account & Auto-Fill Password</button>
-
-        <div class="form-group">
-          <label>Auto-Generated Password *</label>
-          <input type="password" id="tenant-password-input" class="form-control" placeholder="Password (e.g. TN-1001)" required>
-        </div>
-
+        <div class="form-group"><label>Full name for new accounts</label><input type="text" id="tenant-signup-name" class="form-control" autocomplete="name"></div>
+        <div class="form-group"><label>Email *</label><input type="email" id="tenant-email" class="form-control" autocomplete="username" required></div>
+        <div class="form-group"><label>Password *</label><input type="password" id="tenant-password" class="form-control" autocomplete="current-password" required></div>
         <button type="submit" class="btn btn-secondary btn-block">Enter Tenant Portal</button>
+        <button type="button" class="btn btn-outline btn-block" onclick="registerTenantAccount()">Create tenant account</button>
       </form>
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+  <script src="supabase-client.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
