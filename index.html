@@ -3,18 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tulatok Rental Management System</title>
+  <meta name="theme-color" content="#173f36">
+  <meta name="description" content="Hacienda de Manila resident and property services portal.">
+  <title>Hacienda de Manila | Resident & Property Services</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="portal-home">
 
   <!-- TOP HEADER BAR -->
   <header class="top-bar">
     <div class="brand">
-      <h1>Tulatok Rental Management System</h1>
-      <span class="badge-role" id="current-portal-badge">PORTAL SELECTION</span>
+      <span class="brand-seal" aria-hidden="true">H</span>
+      <div><h1>Hacienda De Manila</h1></div>
     </div>
-    <button class="btn btn-outline btn-sm" id="switch-portal-btn" onclick="openPortalSelection()" style="display: none;">Switch Portal</button>
+    <button class="btn btn-outline btn-sm" id="switch-portal-btn" onclick="logout()" aria-label="Exit and sign out" style="display: none;">Exit</button>
   </header>
 
   <!-- MAIN APP CONTAINER -->
@@ -22,31 +24,22 @@
 
     <!-- VIEW 1: HERO & PORTAL SELECTION -->
     <section id="view-portal" class="view active">
+      <div class="entry-door" aria-hidden="true"><span></span><span></span></div>
       <div class="hero-card">
-        <h2>Tulatok Rental Portal</h2>
-        
+        <h2><span>Welcome to</span><strong>Hacienda De Manila</strong></h2>
         <div class="portal-selection-grid">
-          <div class="portal-card" onclick="openModal('admin-modal')">
-            <h3>Admin Command Portal</h3>
-            
-            <button class="btn btn-primary btn-block">Buksan ang Admin Login</button>
-          </div>
-
-          <div class="portal-card" onclick="openModal('tenant-modal')">
+          <button class="portal-card portal-card-admin" type="button" onclick="openPortalEntry('admin-modal')">
+            <span class="portal-card-number">01 · PROPERTY TEAM</span>
+            <h3>Landlord & Admin</h3>
+            <p>Manage residences, tenants, payments, and service requests.</p>
+          </button>
+          <button class="portal-card portal-card-tenant" type="button" onclick="openPortalEntry('tenant-modal')">
+            <span class="portal-card-number">02 · RESIDENT SERVICES</span>
             <h3>Tenant Portal</h3>
-
-            <button class="btn btn-secondary btn-block">Buksan ang Tenant Login</button>
-          </div>
+            <p>View your home details, submit rent proof, and request support.</p>
+          </button>
         </div>
-
-        <div class="arch-box">
-          <h4>System Architecture & Status</h4>
-          <ul>
-            <li>Storage Engine: Supabase Postgres and private Storage</li>
-            <li>Authentication: Supabase Auth with tenant and admin roles</li>
-            <li>Storage: Shared records protected by row-level security</li>
-          </ul>
-        </div>
+        <p class="hero-footnote">A place to belong. A service you can trust.</p>
       </div>
     </section>
 
@@ -54,28 +47,27 @@
     <section id="view-admin" class="view">
       <div class="dashboard-header">
         <div>
-          <h2>Landlord Command Dashboard</h2>
-          <p class="subtitle">System Administrator: <strong id="admin-name-display" style="color: var(--accent-blue);">Milan Liwanag</strong></p>
+          <h2>Property Management Dashboard</h2>
+          <p class="subtitle">Hacienda de Manila · <strong id="admin-name-display" style="color: var(--accent-blue);">Landlord / Admin</strong></p>
         </div>
-        <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
       </div>
 
       <!-- KPI METRICS CARDS -->
       <div class="kpi-grid" style="margin-bottom: 1.5rem;">
         <div class="kpi-card">
-          <span class="kpi-title">Total Registered Tenants</span>
+          <div class="kpi-card-heading"><span class="kpi-title">Total Registered Tenants</span><span class="kpi-icon kpi-icon-tenants" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c.5-3.5 3.1-5.5 7-5.5s6.5 2 7 5.5"></path></svg></span></div>
           <span class="kpi-value" id="kpi-total-tenants">0</span>
         </div>
         <div class="kpi-card">
-          <span class="kpi-title">Expected Monthly Revenue</span>
+          <div class="kpi-card-heading"><span class="kpi-title">Expected Monthly Revenue</span><span class="kpi-icon kpi-icon-revenue" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="12" cy="12" r="2.5"></circle><path d="M7 9h.01M17 15h.01"></path></svg></span></div>
           <span class="kpi-value" id="kpi-total-revenue" style="color: var(--accent-green);">PHP 0</span>
         </div>
         <div class="kpi-card">
-          <span class="kpi-title">Pending Maintenance Requests</span>
+          <div class="kpi-card-heading"><span class="kpi-title">Pending Maintenance Requests</span><span class="kpi-icon kpi-icon-maintenance" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M14.2 6.1a5 5 0 0 0-6.5 6.5L3.9 16.4a2.6 2.6 0 0 0 3.7 3.7l3.8-3.8a5 5 0 0 0 6.5-6.5l-3 3-3.2-3.2 2.5-3.5Z"></path><path d="m5.8 18.2.01.01"></path></svg></span></div>
           <span class="kpi-value" id="kpi-pending-issues" style="color: var(--accent-amber);">0</span>
         </div>
         <div class="kpi-card">
-          <span class="kpi-title">Occupancy Rate</span>
+          <div class="kpi-card-heading"><span class="kpi-title">Occupancy Rate</span><span class="kpi-icon kpi-icon-occupancy" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10Z"></path><path d="M9 21v-7h6v7M7 10h.01M12 10h.01M17 10h.01"></path></svg></span></div>
           <span class="kpi-value" id="kpi-occupancy" style="color: var(--accent-blue);">100%</span>
         </div>
       </div>
@@ -91,6 +83,7 @@
           <button class="nav-btn" onclick="switchAdminTab('tab-issues', this)">Maintenance Tickets</button>
           <button class="nav-btn" onclick="switchAdminTab('tab-feedback', this)">Comments & Feedback</button>
           <button class="nav-btn" onclick="switchAdminTab('tab-documents', this)">Documents</button>
+          <button class="nav-btn" onclick="switchAdminTab('tab-stays', this)">Planned Stays</button>
           <button class="nav-btn" onclick="switchAdminTab('tab-notifications', this)">Notifications</button>
           <button class="nav-btn" onclick="switchAdminTab('tab-reports', this)">Reports</button>
           <button class="nav-btn" onclick="switchAdminTab('tab-console', this)">Audit Log</button>
@@ -128,7 +121,7 @@
                 <div class="form-row">
                   <div class="form-group">
                     <label>Monthly Rent (PHP) *</label>
-                    <input type="number" id="reg-rent" class="form-control" value="8500" required>
+                    <input type="number" id="reg-rent" class="form-control" value="5000" min="1" step="0.01" readonly required>
                   </div>
                   <div class="form-group">
                     <label>Due Day of Month *</label>
@@ -165,34 +158,24 @@
             <div class="content-card"><h3>System Users</h3><p class="subtitle">Accounts registered with Supabase Auth and their rental assignments.</p>
               <div class="table-responsive"><table class="data-table"><thead><tr><th>User</th><th>Email / User ID</th><th>Role</th><th>Unit</th><th>Status</th></tr></thead><tbody id="table-admin-users"></tbody></table></div>
             </div>
-            <div class="content-card"><h3>Role Access Matrix</h3><p class="subtitle">Supabase authentication and row-level security enforce access to rental records.</p>
-              <div class="table-responsive"><table class="data-table"><thead><tr><th>Feature</th><th>Landlord / Admin</th><th>Tenant</th></tr></thead><tbody>
-                <tr><td>Manage units and tenant accounts</td><td>Allowed</td><td>Not allowed</td></tr>
-                <tr><td>Review payments and maintenance</td><td>Allowed</td><td>Not allowed</td></tr>
-                <tr><td>Submit payments and maintenance requests</td><td>View all</td><td>Own account</td></tr>
-                <tr><td>Upload and view documents</td><td>View all</td><td>Own account</td></tr>
-                <tr><td>View audit log and reports</td><td>Allowed</td><td>Not allowed</td></tr>
-              </tbody></table></div>
-            </div>
           </div>
 
           <!-- TAB: PROPERTY / UNIT INVENTORY -->
           <div id="tab-units" class="tab-pane">
             <div class="content-card">
-              <h3 id="unit-form-heading">Add Rental Unit</h3>
-              <form id="form-register-unit" onsubmit="registerUnit(event)">
-                <input type="hidden" id="edit-unit-id">
-                <div class="form-row">
-                  <div class="form-group"><label>Unit Name *</label><input id="unit-name" class="form-control" placeholder="e.g. Unit 303 - 1BR" required></div>
-                  <div class="form-group"><label>Monthly Rent (PHP) *</label><input id="unit-rent" class="form-control" type="number" min="1" required></div>
-                </div>
-                <p class="subtitle">Changing a unit rent affects future tenant registrations. Current tenant rent remains as agreed.</p>
-                <button id="unit-form-submit" class="btn btn-primary" type="submit">Add Unit</button>
-                <button type="button" id="unit-form-cancel" class="btn btn-outline" onclick="cancelUnitEdit()" style="display:none;">Cancel Edit</button>
-              </form>
-            </div>
-            <div class="content-card">
-              <h3>Property / Unit Inventory</h3>
+              <h3>Rooms by Floor</h3>
+              <div id="unit-rate-editor" class="unit-rate-editor" hidden>
+                <h4 id="unit-form-heading">Edit Vacant Room Rate</h4>
+                <form id="form-register-unit" onsubmit="registerUnit(event)">
+                  <input type="hidden" id="edit-unit-id">
+                  <div class="form-row">
+                    <div class="form-group"><label for="unit-name">Room</label><input id="unit-name" class="form-control" readonly></div>
+                    <div class="form-group"><label for="unit-rent">Monthly Rent (PHP) *</label><input id="unit-rent" class="form-control" type="number" min="1" step="0.01" required></div>
+                  </div>
+                  <button id="unit-form-submit" class="btn btn-primary" type="submit">Save Room Rate</button>
+                  <button type="button" id="unit-form-cancel" class="btn btn-outline" onclick="cancelUnitEdit()">Cancel</button>
+                </form>
+              </div>
               <div class="table-responsive"><table class="data-table"><thead><tr><th>Unit</th><th>Monthly Rent</th><th>Occupancy</th><th>Tenant</th><th>Actions</th></tr></thead><tbody id="table-admin-units"></tbody></table></div>
             </div>
           </div>
@@ -248,19 +231,23 @@
           <div id="tab-feedback" class="tab-pane">
             <div class="content-card"><h3>Reply to a Maintenance Request</h3>
               <form id="form-admin-feedback" onsubmit="submitFeedback(event, 'admin')">
-                <div class="form-group"><label>Select request *</label><select id="admin-feedback-issue" class="form-control" required onchange="renderFeedbackThread('admin')"></select></div>
+                <div class="form-group"><label>Select request *</label><select id="admin-feedback-issue" class="form-control" required onchange="selectFeedbackIssue('admin')"></select></div>
+                <div class="reply-context" id="admin-feedback-reply-context" hidden><span>Replying to <strong id="admin-feedback-reply-name"></strong></span><button type="button" class="btn btn-outline btn-sm" onclick="cancelFeedbackReply('admin')">Cancel reply</button></div>
                 <div class="form-group"><label>Comment *</label><textarea id="admin-feedback-text" class="form-control" rows="3" required placeholder="Add an update or ask a follow-up question..."></textarea></div>
                 <button type="submit" class="btn btn-primary">Post Reply</button>
               </form>
             </div>
-            <div class="content-card"><h3>Request Conversation</h3><ul id="admin-feedback-thread" class="feedback-thread"></ul></div>
+            <div class="content-card"><div class="conversation-heading"><h3>Request Conversation</h3><button type="button" class="btn btn-outline btn-sm" id="admin-feedback-clear" onclick="clearFeedbackConversation('admin')" disabled>Clear conversation</button></div><ul id="admin-feedback-thread" class="feedback-thread"></ul></div>
           </div>
           <div id="tab-documents" class="tab-pane">
             <div class="content-card"><h3>Tenant Documents</h3><p class="subtitle">Files are stored in private Supabase storage and shared only with the tenant and landlord.</p>
               <div class="table-responsive"><table class="data-table"><thead><tr><th>Date</th><th>Tenant</th><th>Title</th><th>Version</th><th>Type</th><th>File</th></tr></thead><tbody id="table-admin-documents"></tbody></table></div>
             </div>
           </div>
-          <div id="tab-notifications" class="tab-pane"><div class="content-card"><h3>Notification Log</h3><ul id="admin-notification-list" class="notification-list"></ul></div></div>
+          <div id="tab-stays" class="tab-pane"><div class="content-card"><h3>Planned Stay Requests</h3><p class="subtitle">Review tenant date plans and estimates. Approval records the plan; confirm availability and terms with the tenant before treating it as a booking.</p>
+            <div class="table-responsive"><table class="data-table"><thead><tr><th>Tenant</th><th>Stay dates</th><th>Nights</th><th>Estimated months</th><th>Estimated total</th><th>Status</th><th>Action</th></tr></thead><tbody id="table-admin-stays"></tbody></table></div>
+          </div></div>
+          <div id="tab-notifications" class="tab-pane"><div class="content-card"><div class="notification-heading"><h3>Notification Log</h3><label for="admin-notification-range">Show <select id="admin-notification-range" class="form-control notification-range" onchange="renderNotifications()"><option value="all">All time</option><option value="today">Today</option><option value="week">This week</option><option value="month">This month</option><option value="30days">Last 30 days</option></select></label></div><ul id="admin-notification-list" class="notification-list"></ul></div></div>
           <div id="tab-reports" class="tab-pane"><div class="content-card"><h3>Rental Summary</h3><div id="admin-report-summary" class="details-grid"></div></div></div>
 
           <!-- TAB: SYSTEM CONSOLE LOGS -->
@@ -272,29 +259,35 @@
           </div>
         </div>
       </div>
+      <footer class="portal-system-footer">
+        <strong>Maaliwalas Home Rental and Property Maintenance Management System</strong>
+        <span>For Hacienda de Manila</span>
+      </footer>
     </section>
 
     <!-- VIEW 3: TENANT DASHBOARD -->
     <section id="view-tenant" class="view">
       <div class="dashboard-header">
         <div>
-          <h2>Tenant Portal Dashboard</h2>
+          <h2>Resident Dashboard</h2>
           <p class="subtitle">Welcome back, <strong id="tenant-display-name" style="color: var(--accent-blue);">Tenant</strong></p>
         </div>
-        <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
       </div>
 
       <!-- TENANT DETAILS OVERVIEW -->
       <div class="details-grid" style="margin-bottom: 1.5rem;">
         <div class="details-item">
+          <span class="details-icon details-icon-unit" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10Z"></path><path d="M9 21v-7h6v7M7 10h.01M12 10h.01M17 10h.01"></path></svg></span>
           <label>Assigned Unit</label>
           <span id="tenant-display-unit">Unit ---</span>
         </div>
         <div class="details-item">
+          <span class="details-icon details-icon-rent" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="12" cy="12" r="2.5"></circle><path d="M7 9h.01M17 15h.01"></path></svg></span>
           <label>Monthly Rent</label>
           <span id="tenant-display-rent" style="color: var(--accent-green);">PHP 0.00</span>
         </div>
         <div class="details-item">
+          <span class="details-icon details-icon-due" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"></path></svg></span>
           <label>Due Date Schedule</label>
           <span id="tenant-display-duedate" style="color: var(--accent-amber);">Every 5th</span>
         </div>
@@ -308,6 +301,7 @@
           <button class="nav-btn" onclick="switchTenantTab('tab-tenant-history', this)">My Records</button>
           <button class="nav-btn" onclick="switchTenantTab('tab-tenant-feedback', this)">Request Updates</button>
           <button class="nav-btn" onclick="switchTenantTab('tab-tenant-documents', this)">My Documents</button>
+          <button class="nav-btn" onclick="switchTenantTab('tab-tenant-stays', this)">Plan a Stay</button>
           <button class="nav-btn" onclick="switchTenantTab('tab-tenant-notifications', this)">Notifications</button>
         </aside>
 
@@ -405,12 +399,13 @@
           <div id="tab-tenant-feedback" class="tab-pane">
             <div class="content-card"><h3>Comment on a Maintenance Request</h3>
               <form id="form-tenant-feedback" onsubmit="submitFeedback(event, 'tenant')">
-                <div class="form-group"><label>My request *</label><select id="tenant-feedback-issue" class="form-control" required onchange="renderFeedbackThread('tenant')"></select></div>
+                <div class="form-group"><label>My request *</label><select id="tenant-feedback-issue" class="form-control" required onchange="selectFeedbackIssue('tenant')"></select></div>
+                <div class="reply-context" id="tenant-feedback-reply-context" hidden><span>Replying to <strong id="tenant-feedback-reply-name"></strong></span><button type="button" class="btn btn-outline btn-sm" onclick="cancelFeedbackReply('tenant')">Cancel reply</button></div>
                 <div class="form-group"><label>Comment *</label><textarea id="tenant-feedback-text" class="form-control" rows="3" required placeholder="Ask a question or add information..."></textarea></div>
                 <button type="submit" class="btn btn-primary">Post Comment</button>
               </form>
             </div>
-            <div class="content-card"><h3>Conversation</h3><ul id="tenant-feedback-thread" class="feedback-thread"></ul></div>
+            <div class="content-card"><div class="conversation-heading"><h3>Conversation</h3><button type="button" class="btn btn-outline btn-sm" id="tenant-feedback-clear" onclick="clearFeedbackConversation('tenant')" disabled>Clear conversation</button></div><ul id="tenant-feedback-thread" class="feedback-thread"></ul></div>
           </div>
           <div id="tab-tenant-documents" class="tab-pane">
             <div class="content-card"><h3>Upload a Lease or Supporting Document</h3><p class="subtitle">Use the same title and type to add a new version. Files are stored in your private Supabase document storage.</p>
@@ -425,44 +420,65 @@
             </div>
             <div class="content-card"><h3>My Documents</h3><ul id="tenant-document-list" class="doc-list"></ul></div>
           </div>
-          <div id="tab-tenant-notifications" class="tab-pane"><div class="content-card"><h3>My Notification Log</h3><ul id="tenant-notification-list" class="notification-list"></ul></div></div>
+          <div id="tab-tenant-stays" class="tab-pane">
+            <div class="content-card"><h3>Plan a Stay</h3><p class="subtitle">Choose your planned arrival and departure dates to see an estimate before sending a request.</p>
+              <form id="form-stay-request" onsubmit="submitStayRequest(event)">
+                <div class="form-row"><div class="form-group"><label for="stay-start-date">Arrival date *</label><input id="stay-start-date" class="form-control" type="date" required onchange="updateStayEstimate()"></div>
+                  <div class="form-group"><label for="stay-end-date">Departure date (checkout) *</label><input id="stay-end-date" class="form-control" type="date" required onchange="updateStayEstimate()"></div></div>
+                <div id="stay-estimate" class="stay-estimate" aria-live="polite">Choose both dates to see the rent estimate.</div>
+                <p class="subtitle">Estimate rule: the first 30 days count as one month; each additional 15-day block counts as half a month, with partial blocks rounded up. A request is not a confirmed booking or a change to your current tenancy.</p>
+                <button class="btn btn-primary" type="submit">Send plan for review</button>
+              </form>
+            </div>
+            <div class="content-card"><h3>My Stay Plans</h3><div class="table-responsive"><table class="data-table"><thead><tr><th>Requested</th><th>Dates</th><th>Nights</th><th>Billable months</th><th>Estimated total</th><th>Status</th></tr></thead><tbody id="table-tenant-stays"></tbody></table></div></div>
+          </div>
+          <div id="tab-tenant-notifications" class="tab-pane"><div class="content-card"><div class="notification-heading"><h3>My Notification Log</h3><label for="tenant-notification-range">Show <select id="tenant-notification-range" class="form-control notification-range" onchange="renderNotifications()"><option value="all">All time</option><option value="today">Today</option><option value="week">This week</option><option value="month">This month</option><option value="30days">Last 30 days</option></select></label></div><ul id="tenant-notification-list" class="notification-list"></ul></div></div>
         </div>
       </div>
+      <footer class="portal-system-footer">
+        <strong>Maaliwalas Home Rental and Property Maintenance Management System</strong>
+        <span>For Hacienda de Manila</span>
+      </footer>
     </section>
 
   </main>
 
   <!-- MODAL 1: ADMIN LOGIN -->
-  <div id="admin-modal" class="modal-overlay">
-    <div class="modal-box">
-      <button class="modal-close" onclick="closeModal('admin-modal')">&times;</button>
+  <div id="admin-modal" class="modal-overlay auth-modal">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="admin-login-title">
+      <button class="modal-close" type="button" aria-label="Close sign-in" onclick="closeModal('admin-modal')">&times;</button>
       <div class="modal-header">
-        <h3>Admin Command Login</h3>
-        <p>Login as Landlord / Admin</p>
+        <span class="auth-mark" aria-hidden="true">H</span>
+        <span class="auth-kicker">PROPERTY TEAM</span>
+        <h3 id="admin-login-title">Welcome back</h3>
+        <p>Sign in to manage residences and resident services.</p>
       </div>
       <form onsubmit="loginAdmin(event)">
-        <div class="form-group"><label>Email *</label><input id="admin-email" class="form-control" type="email" autocomplete="username" required></div>
-        <div class="form-group"><label>Password *</label><input id="admin-password" class="form-control" type="password" autocomplete="current-password" required></div>
-        <button type="submit" class="btn btn-primary btn-block">Login to Dashboard</button>
+        <div class="form-group"><label for="admin-email">Email address</label><input id="admin-email" class="form-control" type="email" autocomplete="username" placeholder="you@example.com" required></div>
+        <div class="form-group"><label for="admin-password">Password</label><input id="admin-password" class="form-control" type="password" autocomplete="current-password" placeholder="Enter your password" required></div>
+        <button type="submit" class="btn btn-primary btn-block">Sign in to dashboard</button>
       </form>
     </div>
   </div>
 
   <!-- MODAL 2: TENANT LOGIN & SEARCH -->
-  <div id="tenant-modal" class="modal-overlay">
-    <div class="modal-box">
-      <button class="modal-close" onclick="closeModal('tenant-modal')">&times;</button>
+  <div id="tenant-modal" class="modal-overlay auth-modal" data-mode="login">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="tenant-login-title">
+      <button class="modal-close" type="button" aria-label="Close sign-in" onclick="closeModal('tenant-modal')">&times;</button>
       <div class="modal-header">
-        <h3>Tenant Access Portal</h3>
-        <p>Sign in with your tenant account or create one</p>
+        <span class="auth-mark" aria-hidden="true">H</span>
+        <span class="auth-kicker">RESIDENT SERVICES</span>
+        <h3 id="tenant-login-title">Your home, at a glance</h3>
+        <p>Sign in to view your home and manage your tenancy.</p>
       </div>
-      <form onsubmit="loginTenant(event)">
-        <div class="form-group"><label>Full name for new accounts</label><input type="text" id="tenant-signup-name" class="form-control" autocomplete="name"></div>
-        <div class="form-group"><label>Email *</label><input type="email" id="tenant-email" class="form-control" autocomplete="username" required></div>
-        <div class="form-group"><label>Password *</label><input type="password" id="tenant-password" class="form-control" autocomplete="current-password" required></div>
-        <button type="submit" class="btn btn-secondary btn-block">Enter Tenant Portal</button>
-        <button type="button" class="btn btn-outline btn-block" onclick="registerTenantAccount()">Create tenant account</button>
+      <form onsubmit="loginTenant(event)" autocomplete="off">
+        <div class="form-group tenant-signup-field" hidden><label for="tenant-signup-name">Full name</label><input type="text" id="tenant-signup-name" class="form-control" autocomplete="name" placeholder="Your full name"></div>
+        <div class="form-group"><label for="tenant-email">Email address</label><input type="email" id="tenant-email" class="form-control" autocomplete="off" placeholder="you@example.com" required></div>
+        <div class="form-group"><label for="tenant-password">Password</label><input type="password" id="tenant-password" class="form-control" autocomplete="off" placeholder="Enter your password" required></div>
+        <button type="submit" class="btn btn-primary btn-block" id="tenant-submit-btn">Sign in to resident portal</button>
+        <button type="button" class="btn btn-outline btn-block auth-mode-toggle" id="tenant-mode-toggle" onclick="toggleTenantSignup()">New resident? Create an account</button>
       </form>
+      <p class="auth-note">Your account must be assigned to an active residence by the property team.</p>
     </div>
   </div>
 
