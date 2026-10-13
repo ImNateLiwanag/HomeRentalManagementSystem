@@ -205,6 +205,41 @@ input[type="file"]::file-selector-button { margin-right: 0.7rem; padding: 0.45re
 .details-icon-unit, .details-icon-rent { background: #e8f0e9; color: #236357; }
 .details-icon-due { background: #f7efda; color: #9a742e; }
 
+/* Admin rental calendar */
+.calendar-toolbar { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:.8rem; }
+.calendar-toolbar h3 { margin:0; }
+.calendar-navigation { display:flex; gap:.4rem; flex-wrap:wrap; }
+.calendar-legend { display:flex; flex-wrap:wrap; gap:.5rem 1rem; margin:0 0 1rem; color:var(--text-muted); font-size:.8rem; }
+.calendar-legend span { display:inline-flex; align-items:center; gap:.35rem; }
+.calendar-code { min-width:2.2rem; padding:.2rem .35rem; display:inline-flex; align-items:center; justify-content:center; border-radius:5px; font-size:.68rem; font-weight:800; letter-spacing:.02em; white-space:nowrap; }
+.calendar-code-reservation, .calendar-chip-reservation { background:#e7f0ff; color:#245b9d; }
+.calendar-code-expiry, .calendar-chip-expiry { background:#fae6e4; color:#a33f37; }
+.calendar-code-due, .calendar-chip-due { background:#fff0d4; color:#90620f; }
+.calendar-code-rent, .calendar-chip-rent { background:#eee8fb; color:#67459d; }
+.calendar-code-renewal, .calendar-chip-renewal { background:#e1f3ed; color:#1e6b59; }
+.calendar-code-note, .calendar-chip-note { background:#f4e9ce; color:#805d20; }
+.calendar-scroll { width:100%; overflow-x:auto; padding-bottom:.25rem; }
+.calendar-weekdays, .admin-calendar-grid { min-width:720px; display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); }
+.calendar-weekdays span { padding:.55rem .35rem; text-align:center; color:var(--text-muted); font-size:.74rem; font-weight:750; text-transform:uppercase; }
+.admin-calendar-grid { border-top:1px solid var(--border-color); border-left:1px solid var(--border-color); }
+.calendar-day { min-width:0; min-height:112px; padding:.42rem; display:flex; flex-direction:column; align-items:stretch; gap:.35rem; border:0; border-right:1px solid var(--border-color); border-bottom:1px solid var(--border-color); background:#fff; color:var(--text-main); text-align:left; cursor:pointer; }
+.calendar-day:hover { background:#f8faf8; }
+.calendar-day-outside { background:#f7f8f6; color:#9ca3af; }
+.calendar-day-today .calendar-day-number { color:var(--accent-green); font-weight:850; }
+.calendar-day-selected { box-shadow:inset 0 0 0 2px var(--accent-green); }
+.calendar-day-number { align-self:flex-start; width:1.65rem; height:1.65rem; display:grid; place-items:center; border-radius:50%; font-size:.82rem; }
+.calendar-day-events { min-width:0; display:flex; flex-direction:column; gap:.2rem; }
+.calendar-chip { min-width:0; padding:.16rem .25rem; display:flex; align-items:center; gap:.25rem; overflow:hidden; border-radius:4px; font-size:.65rem; line-height:1.2; }
+.calendar-chip b { flex:none; font-size:.62rem; }
+.calendar-chip span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.calendar-more { color:var(--text-muted); font-size:.65rem; }
+.calendar-agenda { margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--border-color); }
+.calendar-agenda h4 { margin:0 0 .7rem; }
+.calendar-agenda-item { margin:.45rem 0; padding:.65rem; display:flex; align-items:flex-start; gap:.65rem; border:1px solid var(--border-color); border-radius:8px; background:#fff; }
+.calendar-agenda-item > div { min-width:0; flex:1; }
+.calendar-agenda-item p { margin:.18rem 0 0; color:var(--text-muted); font-size:.84rem; }
+.calendar-agenda-item .btn { flex:none; }
+
 /* Tables */
 .table-responsive { width: 100%; overflow-x: auto; border: 1px solid var(--border-color); border-radius: 10px; -webkit-overflow-scrolling: touch; }
 .data-table { width: 100%; min-width: 680px; border-collapse: separate; border-spacing: 0; background: #fff; text-align: left; font-size: 0.86rem; }
@@ -235,6 +270,28 @@ input[type="file"]::file-selector-button { margin-right: 0.7rem; padding: 0.45re
 .document-delete-button:hover:not(:disabled) { border-color: #c98e7f; background: #fff5f2; color: #8a3324; }
 .notification-list time { color: var(--text-muted); font-size: 0.76rem; white-space: nowrap; }
 .notification-list li > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.rate-option { display: flex; align-items: flex-start; gap: .65rem; margin: .8rem 0; color: var(--text-color, #344054); line-height: 1.45; }
+.field-help { margin: .35rem 0 0; color: var(--text-muted); font-size: .82rem; }
+.rate-option input { flex: 0 0 auto; width: 1rem; height: 1rem; margin-top: .15rem; accent-color: var(--accent-green, #236357); }
+.subsection-heading { margin-top: 1.5rem !important; }
+.rent-proposal-list { display: grid; gap: .85rem; }
+.rent-proposal-card { padding: 1rem; border: 1px solid var(--border-color); border-radius: 12px; background: #fbfcfe; }
+.rent-proposal-heading, .rent-proposal-heading > div, .rent-proposal-actions, .rent-terms-actions { display: flex; align-items: center; gap: .65rem; }
+.rent-proposal-heading { justify-content: space-between; align-items: flex-start; }
+.rent-proposal-heading h4 { margin: 0 0 .45rem; }
+.rent-proposal-heading time { color: var(--text-muted); font-size: .78rem; }
+.rent-proposal-amounts { display: flex; align-items: center; gap: 1rem; margin: 1rem 0 .55rem; }
+.rent-proposal-amounts > div { display: grid; gap: .25rem; }
+.rent-proposal-amounts label { color: var(--text-muted); font-size: .78rem; }
+.rent-proposal-amounts strong { color: var(--text-main); font-size: 1.05rem; }
+.rent-proposal-actions { flex-wrap: wrap; margin-top: .8rem; }
+.empty-state { padding: .7rem 0; color: var(--text-muted); }
+.rent-terms-box { width: min(100%, 680px); }
+.rent-terms-box h3 { margin: 0 2.4rem 1rem 0; }
+.rent-terms-content { margin: .5rem 0 1rem; }
+.rent-terms-copy { max-height: 42vh; overflow-y: auto; padding: 1rem; border: 1px solid var(--border-color); border-radius: 10px; background: #fbfcfe; line-height: 1.6; white-space: normal; }
+.rent-terms-actions { justify-content: flex-end; flex-wrap: wrap; margin-top: 1rem; }
+.rent-terms-actions button[hidden], #rent-terms-accept-row[hidden] { display: none !important; }
 .notification-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .8rem; }
 .notification-heading h3 { margin: 0; }
 .notification-heading label { display: inline-flex; align-items: center; gap: .5rem; color: var(--text-muted); font-size: .9rem; }

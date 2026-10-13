@@ -84,6 +84,8 @@
           <button class="nav-btn" onclick="switchAdminTab('tab-feedback', this)">Comments & Feedback</button>
           <button class="nav-btn" onclick="switchAdminTab('tab-documents', this)">Documents</button>
           <button class="nav-btn" onclick="switchAdminTab('tab-stays', this)">Planned Stays</button>
+          <button class="nav-btn" onclick="switchAdminTab('tab-renewals', this)">Lease Renewals</button>
+          <button class="nav-btn" onclick="switchAdminTab('tab-calendar', this)">Calendar</button>
           <button class="nav-btn" onclick="switchAdminTab('tab-notifications', this)">Notifications</button>
           <button class="nav-btn" onclick="switchAdminTab('tab-reports', this)">Reports</button>
           <button class="nav-btn" onclick="switchAdminTab('tab-console', this)">Audit Log</button>
@@ -121,13 +123,15 @@
                 <div class="form-row">
                   <div class="form-group">
                     <label>Monthly Rent (PHP) *</label>
-                    <input type="number" id="reg-rent" class="form-control" value="5000" min="1" step="0.01" readonly required>
+                    <input type="number" id="reg-rent" class="form-control" value="5000" min="1" step="0.01" required>
+                    <p id="reg-rent-help" class="field-help">You can set the selected vacant room's rate here. Editing an active tenant does not change their agreed rent.</p>
                   </div>
                   <div class="form-group">
                     <label>Due Day of Month *</label>
                     <input type="number" id="reg-dueday" class="form-control" min="1" max="28" value="5" required>
                   </div>
                 </div>
+                <div class="form-group"><label for="reg-lease-end">Current contract expiration date</label><input type="date" id="reg-lease-end" class="form-control"><p class="field-help">Separate from ending the tenancy. Leave blank if the signed contract date is unknown.</p></div>
                 <button type="submit" id="tenant-form-submit" class="btn btn-primary btn-block">Assign Tenant & Unit</button>
                 <button type="button" id="tenant-form-cancel" class="btn btn-outline btn-block" onclick="cancelTenantEdit()" style="display:none; margin-top:0.5rem;">Cancel Edit</button>
               </form>
@@ -163,20 +167,26 @@
           <!-- TAB: PROPERTY / UNIT INVENTORY -->
           <div id="tab-units" class="tab-pane">
             <div class="content-card">
-              <h3>Rooms by Floor</h3>
+              <h3>Rooms by Floor</h3><p class="subtitle">Set the advertised monthly rate for vacant rooms. Occupied tenants keep their current rate unless they accept a separate rent proposal.</p>
               <div id="unit-rate-editor" class="unit-rate-editor" hidden>
                 <h4 id="unit-form-heading">Edit Vacant Room Rate</h4>
                 <form id="form-register-unit" onsubmit="registerUnit(event)">
                   <input type="hidden" id="edit-unit-id">
+                  <input type="hidden" id="proposal-tenant-id">
                   <div class="form-row">
                     <div class="form-group"><label for="unit-name">Room</label><input id="unit-name" class="form-control" readonly></div>
                     <div class="form-group"><label for="unit-rent">Monthly Rent (PHP) *</label><input id="unit-rent" class="form-control" type="number" min="1" step="0.01" required></div>
                   </div>
+                  <label class="rate-option" id="apply-rate-option"><input id="apply-rate-to-vacant" type="checkbox"><span>Apply this rate to all vacant rooms</span></label>
+                  <label class="rate-option" id="notify-rent-option"><input id="notify-tenants-about-rate" type="checkbox" checked><span>Send a proposal for this rate to current tenants; their rent changes only after acceptance and the effective date</span></label>
+                  <div class="form-group" id="rate-effective-date-group"><label for="rate-effective-date">Proposed effective date *</label><input id="rate-effective-date" class="form-control" type="date"></div>
                   <button id="unit-form-submit" class="btn btn-primary" type="submit">Save Room Rate</button>
                   <button type="button" id="unit-form-cancel" class="btn btn-outline" onclick="cancelUnitEdit()">Cancel</button>
                 </form>
               </div>
               <div class="table-responsive"><table class="data-table"><thead><tr><th>Unit</th><th>Monthly Rent</th><th>Occupancy</th><th>Tenant</th><th>Actions</th></tr></thead><tbody id="table-admin-units"></tbody></table></div>
+              <h3 class="subsection-heading">Tenant Rent Proposals</h3>
+              <div class="table-responsive"><table class="data-table"><thead><tr><th>Tenant</th><th>Room</th><th>Current</th><th>Proposed</th><th>Effective</th><th>Status</th></tr></thead><tbody id="table-admin-rent-proposals"></tbody></table></div>
             </div>
           </div>
 
@@ -244,9 +254,25 @@
               <div class="table-responsive"><table class="data-table"><thead><tr><th>Date</th><th>Tenant</th><th>Title</th><th>Version</th><th>Type</th><th>File</th></tr></thead><tbody id="table-admin-documents"></tbody></table></div>
             </div>
           </div>
-          <div id="tab-stays" class="tab-pane"><div class="content-card"><h3>Planned Stay Requests</h3><p class="subtitle">Review tenant date plans and estimates. Approval records the plan; confirm availability and terms with the tenant before treating it as a booking.</p>
+          <div id="tab-stays" class="tab-pane"><div class="content-card"><div class="notification-heading"><div><h3>Planned Stay Requests</h3><p class="subtitle">Review tenant date plans and estimates. Approval records the plan; confirm availability and terms with the tenant before treating it as a booking.</p></div><button id="stay-archive-toggle" type="button" class="btn btn-outline btn-sm" onclick="toggleArchivedStayRequests()">Show archived</button></div>
             <div class="table-responsive"><table class="data-table"><thead><tr><th>Tenant</th><th>Stay dates</th><th>Nights</th><th>Estimated months</th><th>Estimated total</th><th>Status</th><th>Action</th></tr></thead><tbody id="table-admin-stays"></tbody></table></div>
           </div></div>
+          <div id="tab-renewals" class="tab-pane"><div class="content-card"><h3>Prepare a Lease Renewal</h3><p class="subtitle">Set proposed dates and rent. The estimate follows the app’s 30-day month and 15-day half-month rule. The tenant receives the offer when the current contract is within three days of expiry. Existing contracts with no end date need one entered in Tenant Management first.</p>
+            <form id="form-lease-renewal" onsubmit="createLeaseRenewal(event)"><div class="form-group"><label for="renewal-tenant">Active tenant *</label><select id="renewal-tenant" class="form-control" required onchange="updateRenewalDates()"></select><p class="field-help">Tenants need a current contract expiration date entered in Tenant Management.</p></div>
+              <div class="form-row"><div class="form-group"><label for="renewal-start">Renewal starts *</label><input id="renewal-start" class="form-control" type="date" required readonly aria-describedby="renewal-start-help" oninput="updateRenewalEstimate()" onchange="updateRenewalEstimate()"><p id="renewal-start-help" class="field-help">Set automatically to the day after the current contract ends.</p></div><div class="form-group"><label for="renewal-end">Proposed renewal ends *</label><input id="renewal-end" class="form-control" type="date" required oninput="updateRenewalEstimate()" onchange="updateRenewalEstimate()"></div></div>
+              <div class="form-row"><div class="form-group"><label for="renewal-rent">Proposed monthly rent (PHP) *</label><input id="renewal-rent" class="form-control" type="number" min="1" step="0.01" required oninput="updateRenewalEstimate()"></div></div>
+              <div class="details-grid renewal-estimate-grid" id="renewal-estimate" aria-live="polite"><div class="details-item"><label>Duration</label><span id="renewal-duration">—</span></div><div class="details-item"><label>Billable months</label><span id="renewal-billable-months">—</span></div><div class="details-item"><label>Estimated contract rent</label><span id="renewal-total">Choose a tenant and dates</span></div></div>
+              <p id="renewal-validation-message" class="field-help" aria-live="polite"></p><button id="renewal-submit" type="submit" class="btn btn-primary" disabled>Save renewal offer</button></form></div>
+            <div class="content-card"><h3>Renewal Offers</h3><div class="table-responsive"><table class="data-table"><thead><tr><th>Tenant</th><th>Proposed dates</th><th>Monthly rent</th><th>Estimated total</th><th>Status</th></tr></thead><tbody id="table-admin-renewals"></tbody></table></div></div></div>
+          <div id="tab-calendar" class="tab-pane">
+            <div class="content-card">
+              <div class="calendar-toolbar"><h3 id="admin-calendar-month">Calendar</h3><div class="calendar-navigation"><button type="button" class="btn btn-outline btn-sm" onclick="changeAdminCalendarMonth(-1)" aria-label="Previous month">Previous</button><button type="button" class="btn btn-outline btn-sm" onclick="goToAdminCalendarToday()">Today</button><button type="button" class="btn btn-outline btn-sm" onclick="changeAdminCalendarMonth(1)" aria-label="Next month">Next</button></div></div>
+              <div class="calendar-legend" aria-label="Calendar legend"><span><b class="calendar-code calendar-code-reservation">R</b> Planned stay</span><span><b class="calendar-code calendar-code-expiry">EXP</b> Lease expiration</span><span><b class="calendar-code calendar-code-due">D</b> Rent due</span><span><b class="calendar-code calendar-code-rent">RP</b> Rent proposal effective</span><span><b class="calendar-code calendar-code-renewal">LR</b> Renewal offer dates</span><span><b class="calendar-code calendar-code-note">N</b> Admin note</span></div>
+              <div class="calendar-scroll"><div class="calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div><div id="admin-calendar-grid" class="admin-calendar-grid" role="grid" aria-label="Admin rental calendar"></div></div>
+              <section class="calendar-agenda" aria-live="polite"><h4 id="admin-calendar-selected-date">Selected date</h4><div id="admin-calendar-events"></div></section>
+            </div>
+            <div class="content-card"><h3>Add Admin Note</h3><p class="subtitle">Private calendar notes are visible only to admins.</p><form id="form-admin-calendar-note" onsubmit="saveAdminCalendarNote(event)"><div class="form-row"><div class="form-group"><label for="calendar-note-title">Title *</label><input id="calendar-note-title" class="form-control" maxlength="100" required placeholder="e.g. Inspect Room 4"></div><div class="form-group"><label for="calendar-note-date">Date *</label><input id="calendar-note-date" class="form-control" type="date" required></div></div><div class="form-group"><label for="calendar-note-details">Details</label><textarea id="calendar-note-details" class="form-control" maxlength="1000" placeholder="Optional details or reminders"></textarea></div><button type="submit" class="btn btn-primary">Save note</button></form></div>
+          </div>
           <div id="tab-notifications" class="tab-pane"><div class="content-card"><div class="notification-heading"><h3>Notification Log</h3><label for="admin-notification-range">Show <select id="admin-notification-range" class="form-control notification-range" onchange="renderNotifications()"><option value="all">All time</option><option value="today">Today</option><option value="week">This week</option><option value="month">This month</option><option value="30days">Last 30 days</option></select></label></div><ul id="admin-notification-list" class="notification-list"></ul></div></div>
           <div id="tab-reports" class="tab-pane"><div class="content-card"><h3>Rental Summary</h3><div id="admin-report-summary" class="details-grid"></div></div></div>
 
@@ -302,6 +328,8 @@
           <button class="nav-btn" onclick="switchTenantTab('tab-tenant-feedback', this)">Request Updates</button>
           <button class="nav-btn" onclick="switchTenantTab('tab-tenant-documents', this)">My Documents</button>
           <button class="nav-btn" onclick="switchTenantTab('tab-tenant-stays', this)">Plan a Stay</button>
+          <button class="nav-btn" onclick="switchTenantTab('tab-tenant-rent-proposals', this)">Rent Change Proposals</button>
+          <button class="nav-btn" onclick="switchTenantTab('tab-tenant-renewals', this)">Lease Renewals</button>
           <button class="nav-btn" onclick="switchTenantTab('tab-tenant-notifications', this)">Notifications</button>
         </aside>
 
@@ -423,8 +451,8 @@
           <div id="tab-tenant-stays" class="tab-pane">
             <div class="content-card"><h3>Plan a Stay</h3><p class="subtitle">Choose your planned arrival and departure dates to see an estimate before sending a request.</p>
               <form id="form-stay-request" onsubmit="submitStayRequest(event)">
-                <div class="form-row"><div class="form-group"><label for="stay-start-date">Arrival date *</label><input id="stay-start-date" class="form-control" type="date" required onchange="updateStayEstimate()"></div>
-                  <div class="form-group"><label for="stay-end-date">Departure date (checkout) *</label><input id="stay-end-date" class="form-control" type="date" required onchange="updateStayEstimate()"></div></div>
+                <div class="form-row"><div class="form-group"><label for="stay-start-date">Arrival date *</label><input id="stay-start-date" class="form-control" type="date" required oninput="updateStayEstimate()" onchange="updateStayEstimate()"></div>
+                  <div class="form-group"><label for="stay-end-date">Departure date (checkout) *</label><input id="stay-end-date" class="form-control" type="date" required oninput="updateStayEstimate()" onchange="updateStayEstimate()"></div></div>
                 <div id="stay-estimate" class="stay-estimate" aria-live="polite">Choose both dates to see the rent estimate.</div>
                 <p class="subtitle">Estimate rule: the first 30 days count as one month; each additional 15-day block counts as half a month, with partial blocks rounded up. A request is not a confirmed booking or a change to your current tenancy.</p>
                 <button class="btn btn-primary" type="submit">Send plan for review</button>
@@ -432,6 +460,8 @@
             </div>
             <div class="content-card"><h3>My Stay Plans</h3><div class="table-responsive"><table class="data-table"><thead><tr><th>Requested</th><th>Dates</th><th>Nights</th><th>Billable months</th><th>Estimated total</th><th>Status</th></tr></thead><tbody id="table-tenant-stays"></tbody></table></div></div>
           </div>
+          <div id="tab-tenant-rent-proposals" class="tab-pane"><div class="content-card"><h3>Rent Change Proposals</h3><p class="subtitle">Review the proposed amount, effective date, and terms. Your current rent remains in effect unless you accept.</p><div id="tenant-rent-proposals" class="rent-proposal-list"></div></div></div>
+          <div id="tab-tenant-renewals" class="tab-pane"><div class="content-card"><h3>Lease Renewal Offers</h3><p class="subtitle">Review the proposed contract dates, rent, and estimate. Accepting records the new expiration date; proposed rent begins on the renewal start date.</p><div id="tenant-renewals" class="rent-proposal-list"></div></div></div>
           <div id="tab-tenant-notifications" class="tab-pane"><div class="content-card"><div class="notification-heading"><h3>My Notification Log</h3><label for="tenant-notification-range">Show <select id="tenant-notification-range" class="form-control notification-range" onchange="renderNotifications()"><option value="all">All time</option><option value="today">Today</option><option value="week">This week</option><option value="month">This month</option><option value="30days">Last 30 days</option></select></label></div><ul id="tenant-notification-list" class="notification-list"></ul></div></div>
         </div>
       </div>
@@ -479,6 +509,16 @@
         <button type="button" class="btn btn-outline btn-block auth-mode-toggle" id="tenant-mode-toggle" onclick="toggleTenantSignup()">New resident? Create an account</button>
       </form>
       <p class="auth-note">Your account must be assigned to an active residence by the property team.</p>
+    </div>
+  </div>
+
+  <div id="rent-terms-modal" class="modal-overlay">
+    <div class="modal-box rent-terms-box" role="dialog" aria-modal="true" aria-labelledby="rent-terms-title">
+      <button class="modal-close" type="button" aria-label="Close terms" onclick="closeModal('rent-terms-modal')">&times;</button>
+      <h3 id="rent-terms-title">Proposed Rent Adjustment - Terms and Agreement</h3>
+      <div id="rent-terms-content" class="rent-terms-content"></div>
+      <label id="rent-terms-accept-row" class="rate-option"><input id="rent-terms-accept-checkbox" type="checkbox"><span>I have reviewed these terms and agree to the proposed rent and effective date.</span></label>
+      <div class="rent-terms-actions"><button id="rent-terms-accept-button" class="btn btn-primary" type="button">Accept Proposal</button><button class="btn btn-outline" type="button" onclick="closeModal('rent-terms-modal')">Close</button></div>
     </div>
   </div>
 
